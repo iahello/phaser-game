@@ -1,0 +1,296 @@
+<!-- Vince Aldrin Cabrera, Iah Buenacosa - WD-201-->
+<!doctype html> 
+<html lang="en"> 
+<head> 
+	<meta charset="UTF-8" />
+	<title>Takbo!</title>
+	<script type="text/javascript" src="js/phaser.min.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+<script type="text/javascript">
+var game = new Phaser.Game(1366, 768, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+function preload() {
+	game.load.image('bckgrnd', 'assets/sky.jpg');
+    game.load.image('water', 'assets/water1.png');
+    game.load.image('ground1', 'assets/pLedge1.png');
+    game.load.image('ground2', 'assets/pLedge2.png');
+    game.load.image('ground3', 'assets/pLedge3.png');
+    game.load.image('ground4', 'assets/pLedge3.png');
+    game.load.image('monsterz', 'assets/t.png');
+    game.load.image('ground5', 'assets/pFloat2.png');
+    game.load.image('ground6', 'assets/pFloat1.png');
+    game.load.image('baphomet', 'assets/fly.png');
+    game.load.spritesheet('chicken', 'assets/player.png', 73, 98);
+    game.load.audio('ding', 'assets/ding.wav');
+    game.load.audio('jump', 'assets/jump.wav');
+    game.load.audio('bgm', 'assets/bg.wav');
+}
+var platform;
+var player;
+var hp = 1000;
+var baphomet;
+var baphomet2;
+var water;
+var cursors;
+var monster;
+var score = 0;
+var highscore = [];
+var dingSound,
+    jumpSound;
+function create() {
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+    //Environment Settings
+    var bg = game.add.sprite(0, 0, 'bckgrnd');
+    
+    platform = game.add.group();
+    platform.enableBody = true;
+    
+    //bottom platforms : left to right ledge
+    
+    var ledge1 = platform.create(-64, 384, 'ground1');
+    ledge1.body.immovable = true;
+    
+    var ledge3 = platform.create(320, 512, 'ground3');
+    ledge3.body.immovable = true;
+    
+    var ledge5 = platform.create(555, 600, 'ground5');
+    ledge5.body.immovable = true;
+    
+    var ledge4 = platform.create(918, 512, 'ground3');
+    ledge4.body.immovable = true;
+    
+    var ledge2 = platform.create(1174, 384, 'ground2');
+    ledge2.body.immovable = true;
+    
+    //upper platforms: left to right ledge
+    
+    var ledge6 = platform.create(555, 350, 'ground5');
+    ledge6.body.immovable = true;
+    
+    var ledge7 = platform.create(173, 200, 'ground5');
+    ledge7.body.immovable = true;
+    
+    var ledge8 = platform.create(937, 200, 'ground5');
+    ledge8.body.immovable = true;
+    
+    player = game.add.sprite(335, 250, 'chicken', 3);
+    
+    baphomet = game.add.sprite(Math.floor(Math.random() * 1500), Math.floor(Math.random() * 1500), 'baphomet');
+    baphomet.animations.add('move');
+    baphomet.scale.setTo(1.3, 1.3);
+    game.physics.arcade.enable(baphomet);
+    baphomet.body.collideWorldBounds = true;
+    
+    baphomet2 = game.add.sprite(Math.floor(Math.random() * 1500), Math.floor(Math.random() * 1500), 'baphomet');
+    baphomet2.animations.add('move');
+    baphomet2.scale.setTo(1.3, 1.3);
+    game.physics.arcade.enable(baphomet2);
+    baphomet2.body.collideWorldBounds = true;
+    
+    monster = game.add.group();
+    monster.enableBody = true;
+
+    for (var i = 0; i < 20; i++)
+    {
+        var monsterz = monster.create(i * 70, 0, 'monsterz', Math.floor(Math.random() * 3));
+         monsterz2 = monster.create(i * 70, 250, 'monsterz', Math.floor(Math.random() * 3));
+         monsterz3 = monster.create(i * 70, 350, 'monsterz', Math.floor(Math.random() * 3));
+
+        monsterz.scale.setTo(1.3, 1.3);
+        monsterz3.scale.setTo(1.3, 1.3);
+        monsterz2.scale.setTo(1.3, 1.3);
+        monsterz2.body.gravity.y = 300;
+        monsterz.body.gravity.y = 300;
+        monsterz3.body.gravity.y = 300;
+        monsterz2.body.bounce.y = 0.7 + Math.random() * 0.2;
+        monsterz.body.bounce.y = 0.7 + Math.random() * 0.2;
+        monsterz3.body.bounce.y = 0.7 + Math.random() * 0.2;
+    }
+
+    water = game.add.sprite(0, 708, 'water');
+    game.physics.arcade.enable(water);
+
+    game.physics.arcade.enable(player);
+
+    player.body.bounce.y = 0.2;
+    player.body.gravity.y = 250;
+    player.body.collideWorldBounds = true;
+
+    player.animations.add('left', [0, 1, 2], 13, true);
+    player.animations.add('right', [4, 5, 6,], 13, true);
+    
+    scoreText = game.add.text(16, 60, 'Score: 0', { fontSize: '32px', fill: '#000' });
+    hptext = game.add.text(16, 16, 'HP: 1000', { fontSize: '32px', fill: '#000' });
+
+    dingSound = game.add.audio('ding');
+    jumpSound = game.add.audio('jump');
+    game.add.audio('bgm').play();
+    cursors = game.input.keyboard.createCursorKeys();
+}
+     
+    
+function update(){
+    game.physics.arcade.moveToObject(baphomet, player, 120);
+    game.physics.arcade.moveToObject(baphomet2, player, 120);
+    game.physics.arcade.overlap(player, baphomet, (player, baphomet) => {
+      baphomet.animations.play('move', 8, true);
+      hp -= Math.floor(Math.random() * 10);
+      hptext.text = 'HP: ' + hp;
+      if (hp <= 0) {
+        hptext.text = 'HP: 1000';
+        baphomet.animations.stop(null, true);
+        hp = 1000;
+        highscore.push(score);
+        alert('The chicken got butchered!! *smh* \n \t Your score is: ' + score);
+        var allhs = "";
+        highscore.map(score => {
+          allhs += "\n\t " + score + "\n";
+        })
+        alert('Highscores ' + allhs);
+        score = 0;
+        scoreText.text = 'Score: 0';
+        player.reset(Math.random() * 1000, 200);
+        baphomet.reset(Math.floor(Math.random() * 1500), Math.floor(Math.random() * 1500));
+        monster.destroy(false, true);
+        for (var i = 0; i < 20; i++)
+        {
+            var monsterz = monster.create(i * 70, 0, 'monsterz', Math.floor(Math.random() * 3));
+         monsterz2 = monster.create(i * 70, 250, 'monsterz', Math.floor(Math.random() * 3));
+         monsterz3 = monster.create(i * 70, 350, 'monsterz', Math.floor(Math.random() * 3));
+
+        monsterz.scale.setTo(1.3, 1.3);
+        monsterz3.scale.setTo(1.3, 1.3);
+        monsterz2.scale.setTo(1.3, 1.3);
+        monsterz2.body.gravity.y = 300;
+        monsterz.body.gravity.y = 300;
+        monsterz3.body.gravity.y = 300;
+        monsterz2.body.bounce.y = 0.7 + Math.random() * 0.2;
+        monsterz.body.bounce.y = 0.7 + Math.random() * 0.2;
+        monsterz3.body.bounce.y = 0.7 + Math.random() * 0.2;
+        }
+      }
+    });
+    game.physics.arcade.overlap(player, baphomet2, (player, baphomet2) => {
+      baphomet2.animations.play('move', 8, true);
+      hp -= Math.floor(Math.random() * 10);
+      hptext.text = 'HP: ' + hp;
+      if (hp <= 0) {
+        baphomet2.animations.stop(null, true);
+        hptext.text = 'HP: 1000';
+        highscore.push(score);
+        alert('The chicken got butchered!! *smh* \n \t Your score is: ' + score);
+        var allhs = "";
+        highscore.map(score => {
+          allhs += "\n\t " + score + "\n";
+        })
+        alert('Highscores ' + allhs);
+        score = 0;
+        hp = 1000;
+        player.reset(Math.random() * 1000, 200);
+        scoreText.text = 'Score: 0';
+        baphomet2.reset(Math.floor(Math.random() * 1500), Math.floor(Math.random() * 1500));
+        monster.destroy(false, true);
+        for (var i = 0; i < 20; i++)
+        {
+           var monsterz = monster.create(i * 70, 0, 'monsterz', Math.floor(Math.random() * 3));
+         monsterz2 = monster.create(i * 70, 250, 'monsterz', Math.floor(Math.random() * 3));
+         monsterz3 = monster.create(i * 70, 350, 'monsterz', Math.floor(Math.random() * 3));
+
+        monsterz.scale.setTo(1.3, 1.3);
+        monsterz3.scale.setTo(1.3, 1.3);
+        monsterz2.scale.setTo(1.3, 1.3);
+        monsterz2.body.gravity.y = 300;
+        monsterz.body.gravity.y = 300;
+        monsterz3.body.gravity.y = 300;
+        monsterz2.body.bounce.y = 0.7 + Math.random() * 0.2;
+        monsterz.body.bounce.y = 0.7 + Math.random() * 0.2;
+        monsterz3.body.bounce.y = 0.7 + Math.random() * 0.2;
+        }
+      }
+    });
+    
+    game.physics.arcade.overlap(player, water, (player, water) => {
+        baphomet.animations.stop(null, true);
+        baphomet2.animations.stop(null, true);
+        player.kill();
+        baphomet.kill();
+        monster.destroy(false, true);
+        for (var i = 0; i < 20; i++)
+        {
+            var monsterz = monster.create(i * 70, 0, 'monsterz', Math.floor(Math.random() * 3));
+         monsterz2 = monster.create(i * 70, 250, 'monsterz', Math.floor(Math.random() * 3));
+         monsterz3 = monster.create(i * 70, 350, 'monsterz', Math.floor(Math.random() * 3));
+
+        monsterz.scale.setTo(1.3, 1.3);
+        monsterz3.scale.setTo(1.3, 1.3);
+        monsterz2.scale.setTo(1.3, 1.3);
+        monsterz2.body.gravity.y = 300;
+        monsterz.body.gravity.y = 300;
+        monsterz3.body.gravity.y = 300;
+        monsterz2.body.bounce.y = 0.7 + Math.random() * 0.2;
+        monsterz.body.bounce.y = 0.7 + Math.random() * 0.2;
+        monsterz3.body.bounce.y = 0.7 + Math.random() * 0.2;
+        }
+        highscore.push(score);
+        alert('Chickens can\'t swim! *smh* \n \t Your score is: ' + score);
+        var allhs = "";
+        highscore.map(score => {
+          allhs += "\n\t " + score + "\n";
+        })
+        alert('Highscores ' + allhs);
+        score = 0;
+        hptext.text = 'HP: 1000';
+        hp = 1000;
+        scoreText.text = 'Score: 0';
+        player.reset(Math.random() * 1000, 200);
+        baphomet.reset(Math.floor(Math.random() * 1500), Math.floor(Math.random() * 1500));
+    }, null, this);
+
+    game.physics.arcade.overlap(player, monster, (player, star) => {
+        star.kill();
+        score += Math.floor(1 + Math.random() * 10);
+        scoreText.text = 'Score: ' + score;
+        dingSound.play();
+    }, null, this);
+
+    game.physics.arcade.collide(player, platform);
+    game.physics.arcade.collide(monster, platform);
+    game.physics.arcade.collide(baphomet, platform);
+    game.physics.arcade.collide(baphomet2, platform);
+
+    player.body.velocity.x = 0;
+
+    if (cursors.left.isDown)
+    {
+        player.body.velocity.x = -150;
+
+        player.animations.play('left');
+    }
+    else if (cursors.right.isDown)
+    {
+        player.body.velocity.x = 150;
+
+        player.animations.play('right');
+    }
+    else
+    {
+        player.animations.stop();
+
+        player.frame = 4;
+    }
+    
+    if (cursors.up.isDown && player.body.touching.down)
+    {
+        player.body.velocity.y = -350;
+        jumpSound.play();
+    }
+    
+    }
+</script>
+</body>
+</html>
